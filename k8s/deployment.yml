@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphbuilder-backend
+  labels:
+    app: graphbuilder
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: graphbuilder
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: graphbuilder
+        component: backend
+    spec:
+      containers:
+        - name: backend
+          image: ai-graph-builder:latest
+          command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: graphbuilder-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphbuilder-frontend
+  labels:
+    app: graphbuilder
+    component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: graphbuilder
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: graphbuilder
+        component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ai-graph-builder:latest
+          command: ["streamlit", "run", "frontend/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+          ports:
+            - containerPort: 8501
+          env:
+            - name: BACKEND_URL
+              value: "http://graphbuilder-backend-svc:8000"
+          envFrom:
+            - secretRef:
+                name: graphbuilder-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphbuilder-backend-svc
+spec:
+  selector:
+    app: graphbuilder
+    component: backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphbuilder-frontend-svc
+spec:
+  selector:
+    app: graphbuilder
+    component: frontend
+  ports:
+    - port: 80
+      targetPort: 8501
+  type: LoadBalancer
