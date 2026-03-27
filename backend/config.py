@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     api_secret_key: str = "default-secret-key"
     rate_limit: str = "30/minute"
 
+    # ── WhatsApp Group Notification ────────────────────────
+    whatsapp_group_link: str = "https://chat.whatsapp.com/DIvuKQEblyWKVWm1uf7tlb"
+
+    # ── FAISS ──────────────────────────────────────────────
+    faiss_index_dir: str = "faiss_index"
+
     # ── LLM Models for Comparison ──────────────────────────
     llm_models: list[str] = [
         "openai/gpt-oss-120b",

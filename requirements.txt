@@ -15,6 +15,7 @@ neo4j>=5.17.0
 
 # Vector DB & Embeddings
 pinecone>=5.0.0
+faiss-cpu>=1.7.4
 sentence-transformers>=2.5.0
 
 # LLM

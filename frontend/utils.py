@@ -5,8 +5,15 @@ Utility helpers for the Streamlit frontend.
 import httpx
 import os
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
-API_KEY = os.getenv("API_SECRET_KEY", "")
+# Support both env vars and Streamlit secrets (for Streamlit Cloud deployment)
+try:
+    import streamlit as st
+    _secrets = dict(st.secrets) if hasattr(st, "secrets") else {}
+except Exception:
+    _secrets = {}
+
+BACKEND_URL = os.getenv("BACKEND_URL", _secrets.get("BACKEND_URL", "http://localhost:8000"))
+API_KEY = os.getenv("API_SECRET_KEY", _secrets.get("API_SECRET_KEY", ""))
 
 
 def _headers() -> dict:

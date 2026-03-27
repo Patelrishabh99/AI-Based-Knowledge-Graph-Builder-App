@@ -18,12 +18,15 @@ from backend.models.schemas import (
     QueryRequest, QueryResponse, CompareRequest, CompareResponse,
     GraphExploreRequest, GraphData, DashboardMetrics,
     HealthResponse, ModelComparison,
+    BenchmarkRequest, BenchmarkResponse,
+    NotifyRequest, NotifyResponse,
 )
 from backend.services import (
     neo4j_service, llm_service, rag_service,
     cypher_generator, query_intelligence,
     session_service, metrics_service,
 )
+from backend.services import faiss_service, vectordb_benchmark, notification_service
 
 # ── Logging ───────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(name)s | %(levelname)s | %(message)s")
@@ -79,6 +82,7 @@ async def health_check():
         status="healthy",
         neo4j_connected=neo4j_service.check_connection(),
         pinecone_connected=rag_service.check_pinecone_connection(),
+        faiss_loaded=faiss_service.check_faiss_connection(),
     )
 
 
@@ -301,4 +305,70 @@ async def index_data(request: Request):
         rag_service.index_graph_data()
         return {"status": "success", "message": "Graph data indexed into Pinecone"}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ══════════════════════════════════════════════════════════════
+#  VECTOR DB BENCHMARK ENDPOINTS
+# ══════════════════════════════════════════════════════════════
+
+@app.post("/api/vectordb/benchmark")
+@limiter.limit("10/minute")
+async def benchmark_vectordbs(request: Request, body: BenchmarkRequest):
+    """Run FAISS vs Pinecone benchmark on a query."""
+    await verify_api_key(request)
+    try:
+        result = vectordb_benchmark.run_benchmark(body.query, top_k=body.top_k)
+        return result
+    except Exception as e:
+        logger.error("Benchmark error: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/vectordb/index-faiss")
+async def index_faiss(request: Request):
+    """Index Neo4j graph data into FAISS for local semantic search."""
+    await verify_api_key(request)
+    try:
+        result = faiss_service.index_graph_data()
+        return result
+    except Exception as e:
+        logger.error("FAISS indexing error: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/vectordb/comparison")
+async def get_vectordb_comparison():
+    """Get static FAISS vs Pinecone property comparison."""
+    return {
+        "properties": vectordb_benchmark.get_comparison_properties(),
+        "faiss_stats": vectordb_benchmark.get_faiss_stats(),
+        "pinecone_stats": vectordb_benchmark.get_pinecone_stats(),
+    }
+
+
+# ══════════════════════════════════════════════════════════════
+#  NOTIFICATION ENDPOINTS
+# ══════════════════════════════════════════════════════════════
+
+@app.post("/api/notify", response_model=NotifyResponse)
+async def send_notification(body: NotifyRequest):
+    """Generate a WhatsApp share link for query activity notification."""
+    try:
+        result = notification_service.format_query_notification(
+            query=body.query,
+            model=body.model,
+            answer_summary=body.answer_summary,
+            response_type=body.response_type,
+            latency_ms=body.latency_ms,
+            intent=body.intent,
+        )
+        return NotifyResponse(
+            whatsapp_url=result["whatsapp_url"],
+            message=result["message"],
+            timestamp=result["timestamp"],
+            group_link=notification_service.get_group_link(),
+        )
+    except Exception as e:
+        logger.error("Notification error: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

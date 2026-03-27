@@ -36,6 +36,7 @@ def render_sidebar():
         if "error" not in health:
             neo4j_ok = health.get("neo4j_connected", False)
             pinecone_ok = health.get("pinecone_connected", False)
+            faiss_ok = health.get("faiss_loaded", False)
 
             st.markdown(
                 f"Neo4j: {render_status_badge('Connected', 'success') if neo4j_ok else render_status_badge('Disconnected', 'error')}",
@@ -43,6 +44,10 @@ def render_sidebar():
             )
             st.markdown(
                 f"Pinecone: {render_status_badge('Connected', 'success') if pinecone_ok else render_status_badge('Disconnected', 'warning')}",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"FAISS: {render_status_badge('Loaded', 'success') if faiss_ok else render_status_badge('Not Loaded', 'warning')}",
                 unsafe_allow_html=True,
             )
             st.markdown(
@@ -91,12 +96,22 @@ def render_sidebar():
         st.markdown("#### ⚡ Quick Actions")
 
         if st.button("📥 Index Data to Pinecone", use_container_width=True):
-            with st.spinner("Indexing..."):
+            with st.spinner("Indexing to Pinecone..."):
                 result = api_post("/api/index", {})
                 if "error" in result:
                     st.error(result["error"])
                 else:
-                    st.success("Indexing complete!")
+                    st.success("Pinecone indexing complete!")
+
+        if st.button("📥 Index Data to FAISS", use_container_width=True):
+            with st.spinner("Building FAISS index..."):
+                result = api_post("/api/vectordb/index-faiss", {})
+                if "error" in result:
+                    st.error(result["error"])
+                elif result.get("status") == "success":
+                    st.success(f"FAISS index built! ({result.get('count', 0)} vectors)")
+                else:
+                    st.warning(result.get("message", "Unknown status"))
 
         if st.button("📋 View Graph Schema", use_container_width=True):
             schema = api_get("/api/schema")

@@ -33,10 +33,15 @@ from frontend.components.response_panel import render_response_panel
 from frontend.components.graph_panel import render_graph_panel
 from frontend.components.dashboard_panel import render_dashboard_panel
 from frontend.components.comparison_panel import render_comparison_panel
+from frontend.components.vectordb_panel import render_vectordb_panel
+from frontend.components.notify_button import render_notify_button
 from frontend.utils import api_post
 
 # ── Sidebar ───────────────────────────────────────────────────
 render_sidebar()
+
+# ── Floating Notify Button (top-right) ────────────────────────
+render_notify_button()
 
 # ── Header ────────────────────────────────────────────────────
 st.markdown("""
@@ -47,10 +52,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Tab Navigation ────────────────────────────────────────────
-tab_query, tab_graph, tab_compare, tab_dashboard = st.tabs([
+tab_query, tab_graph, tab_compare, tab_vectordb, tab_dashboard = st.tabs([
     "💬 Query & Response",
     "🌐 3D Graph Explorer",
     "⚖️ LLM Comparison",
+    "🔬 FAISS vs Pinecone",
     "📊 Dashboard",
 ])
 
@@ -95,7 +101,14 @@ with tab_compare:
 
 
 # ══════════════════════════════════════════════════════════════
-#  TAB 4: ENTERPRISE DASHBOARD
+#  TAB 4: FAISS vs PINECONE COMPARISON
+# ══════════════════════════════════════════════════════════════
+with tab_vectordb:
+    render_vectordb_panel()
+
+
+# ══════════════════════════════════════════════════════════════
+#  TAB 5: ENTERPRISE DASHBOARD
 # ══════════════════════════════════════════════════════════════
 with tab_dashboard:
     render_dashboard_panel()

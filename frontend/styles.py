@@ -315,6 +315,75 @@ def get_custom_css() -> str:
     /* ── Hide Streamlit defaults ──────────────────────────── */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+
+    /* ── Floating Notify Button ───────────────────────────── */
+    .notify-container {
+        position: fixed;
+        top: 70px;
+        right: 24px;
+        z-index: 1000;
+    }
+
+    .notify-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #25D366, #128C7E) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 50px !important;
+        padding: 10px 20px !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-decoration: none !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    .notify-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 30px rgba(37, 211, 102, 0.55) !important;
+    }
+
+    /* ── Benchmark Cards ──────────────────────────────────── */
+    .bench-card {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 14px !important;
+        padding: 20px !important;
+        text-align: center;
+        transition: all 0.3s !important;
+    }
+
+    .bench-card:hover {
+        border-color: var(--border-hover) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* ── Comparison Table ─────────────────────────────────── */
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+
+    .comparison-table th {
+        padding: 14px;
+        text-align: left;
+        border-bottom: 2px solid var(--border);
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.75rem;
+    }
+
+    .comparison-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+        color: var(--text-primary);
+    }
     </style>
     """
 

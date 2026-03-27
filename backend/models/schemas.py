@@ -109,4 +109,42 @@ class HealthResponse(BaseModel):
     status: str = "healthy"
     neo4j_connected: bool = False
     pinecone_connected: bool = False
+    faiss_loaded: bool = False
     version: str = "1.0.0"
+
+
+# ── Vector DB Benchmark ───────────────────────────────────────
+
+class BenchmarkRequest(BaseModel):
+    """Vector DB benchmark request."""
+    query: str = Field(..., min_length=1, max_length=2000, description="Query to benchmark")
+    top_k: int = Field(5, ge=1, le=50, description="Number of results to return")
+
+
+class BenchmarkResponse(BaseModel):
+    """Vector DB benchmark results."""
+    query: str
+    top_k: int
+    faiss: dict = {}
+    pinecone: dict = {}
+    recommendation: dict = {}
+
+
+# ── Notification ──────────────────────────────────────────────
+
+class NotifyRequest(BaseModel):
+    """Query notification request."""
+    query: str = Field(..., description="The query that was asked")
+    model: str = Field("", description="Model used")
+    answer_summary: str = Field("", description="Summary of the answer")
+    response_type: str = Field("text", description="Type of response")
+    latency_ms: float = Field(0, description="Response latency in ms")
+    intent: str = Field("", description="Detected query intent")
+
+
+class NotifyResponse(BaseModel):
+    """Notification response with share link."""
+    whatsapp_url: str
+    message: str
+    timestamp: str
+    group_link: str = ""
